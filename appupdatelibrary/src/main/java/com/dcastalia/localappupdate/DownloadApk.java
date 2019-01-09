@@ -118,7 +118,6 @@ public class DownloadApk extends Activity{
                 URL url = new URL(downloadUrl);
                 HttpURLConnection c = (HttpURLConnection) url.openConnection();
                 c.setRequestMethod("GET");
-                c.setDoOutput(true);
                 c.connect();
                 String PATH = Environment.getExternalStorageDirectory()+"/Download/";
                 File file = new File(PATH);
