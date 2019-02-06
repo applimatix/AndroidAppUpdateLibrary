@@ -166,8 +166,6 @@ public class DownloadApk extends Activity{
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         context.startActivity(intent);
-        activity.finish();
-
     }
 
     private static Uri getUriFromFile(String location) {
