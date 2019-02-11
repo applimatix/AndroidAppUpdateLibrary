@@ -19,44 +19,52 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 
 /**
  * Created by piashsarker on 1/16/18.
  */
 
-public class DownloadApk extends Activity{
-
+public class DownloadApk extends Activity {
 
     private static ProgressDialog bar;
+
     private static String TAG = "DownloadApk";
-    private static Context context ;
-    private static Activity activity ;
-    private static String downloadUrl ;
 
+    private static Context context;
 
-    public DownloadApk(Context context){
-        this.context = context ;
-        this.activity = (Activity)context;
+    private static Activity activity;
+
+    private static String downloadUrl;
+
+    private static Map<String, String> downloadHeaders;
+
+    public DownloadApk(Context context) {
+        this.context = context;
+        this.activity = (Activity) context;
+    }
+
+    public void startDownloadingApk(String url) {
+        startDownloadingApk(url, null);
+    }
+
+    public void startDownloadingApk(String url, Map<String, String> headers) {
+
+        downloadHeaders = headers;
+        downloadUrl = url;
+        if (downloadUrl != null) {
+            new DownloadNewVersion().execute();
+        }
+
     }
 
 
-    public   void startDownloadingApk(String url){
-           downloadUrl = url ;
-           if(downloadUrl!=null){
-               new DownloadNewVersion().execute();
-           }
-
-    }
-
-
-
-
-    private static  class DownloadNewVersion extends AsyncTask<String,Integer,Boolean> {
+    private static class DownloadNewVersion extends AsyncTask<String, Integer, Boolean> {
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            if(bar==null){
+            if (bar == null) {
                 bar = new ProgressDialog(context);
                 bar.setCancelable(false);
                 bar.setMessage("Downloading...");
@@ -76,35 +84,36 @@ public class DownloadApk extends Activity{
             bar.setMax(100);
             bar.setProgress(progress[0]);
             String msg = "";
-            if(progress[0]>99){
+            if (progress[0] > 99) {
 
-                msg="Finishing... ";
+                msg = "Finishing... ";
 
-            }else {
+            } else {
 
-                msg="Downloading... "+progress[0]+"%";
+                msg = "Downloading... " + progress[0] + "%";
             }
             bar.setMessage(msg);
 
         }
+
         @Override
         protected void onPostExecute(Boolean result) {
             // TODO Auto-generated method stub
             super.onPostExecute(result);
-            if(bar.isShowing() && bar!=null){
+            if (bar.isShowing() && bar != null) {
                 bar.dismiss();
-                bar=null;
+                bar = null;
             }
 
 
-            if(result){
+            if (result) {
 
-                Toast.makeText(context,"Update Done",
+                Toast.makeText(context, "Update Done",
                         Toast.LENGTH_SHORT).show();
 
-            }else{
+            } else {
 
-                Toast.makeText(context,"Error: Try Again",
+                Toast.makeText(context, "Error: Try Again",
                         Toast.LENGTH_SHORT).show();
 
             }
@@ -117,14 +126,19 @@ public class DownloadApk extends Activity{
             try {
                 URL url = new URL(downloadUrl);
                 HttpURLConnection c = (HttpURLConnection) url.openConnection();
+                if (downloadHeaders != null && !downloadHeaders.isEmpty()) {
+                    for (String key: downloadHeaders.keySet()) {
+                        c.setRequestProperty(key, downloadHeaders.get(key));
+                    }
+                }
                 c.setRequestMethod("GET");
                 c.connect();
-                String PATH = Environment.getExternalStorageDirectory()+"/Download/";
+                String PATH = Environment.getExternalStorageDirectory() + "/Download/";
                 File file = new File(PATH);
                 file.mkdirs();
-                File outputFile = new File(file,"app-debug.apk");
+                File outputFile = new File(file, "app-debug.apk");
 
-                if(outputFile.exists()){
+                if (outputFile.exists()) {
                     outputFile.delete();
                 }
 
@@ -136,10 +150,10 @@ public class DownloadApk extends Activity{
                 byte[] buffer = new byte[1024];
                 int len1 = 0;
                 int per = 0;
-                int downloaded=0;
+                int downloaded = 0;
                 while ((len1 = is.read(buffer)) != -1) {
                     fos.write(buffer, 0, len1);
-                    downloaded +=len1;
+                    downloaded += len1;
                     per = (int) (downloaded * 100 / total_size);
                     publishProgress(per);
                 }
@@ -150,7 +164,7 @@ public class DownloadApk extends Activity{
             } catch (MalformedURLException e) {
                 Log.e(TAG, "Update Error: " + e.getMessage());
                 flag = false;
-            }catch (IOException ex){
+            } catch (IOException ex) {
                 ex.printStackTrace();
             }
             return flag;
@@ -170,20 +184,14 @@ public class DownloadApk extends Activity{
 
     private static Uri getUriFromFile(String location) {
 
-        if(Build.VERSION.SDK_INT<24){
-            return   Uri.fromFile(new File(location + "app-debug.apk"));
-        }
-        else{
+        if (Build.VERSION.SDK_INT < 24) {
+            return Uri.fromFile(new File(location + "app-debug.apk"));
+        } else {
             return FileProvider.getUriForFile(context,
                     context.getApplicationContext().getPackageName() + ".provider",
                     new File(location + "app-debug.apk"));
         }
     }
-
-
-
-
-
 
 
 }
